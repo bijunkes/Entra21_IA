@@ -1,30 +1,21 @@
-import os
+# Importação de bibliotecas
+import os # Usado para ler variável de ambiente
+import streamlit as st # Transforma código Pythom em interface web
+from dotenv import load_dotenv # Carrega variáveis do .env
+from groq import Groq # Comunicação com API do Groq
 
-import streamlit as st
-from dotenv import load_dotenv
-from groq import Groq
-
-
-# =========================
-# CONFIGURAÇÃO
-# =========================
-
+# Obtendo chave da API
 load_dotenv()
-
 api_key = os.getenv("GROQ_API_KEY")
 
 if not api_key:
     st.error("GROQ_API_KEY não encontrada no arquivo .env")
     st.stop()
+    
+client = Groq(api_key=api_key) # Criando cliente da Groq, estabelecendo conexão
 
-client = Groq(api_key=api_key)
-
-
-# =========================
-# PROMPT DO SHERLOCK
-# =========================
-
-SYSTEM_PROMPT = """
+# Prompt
+PROMPT = """
 Você é Sherlock Holmes, o famoso detetive criado por Arthur Conan Doyle.
 
 Uma falha em uma máquina do tempo trouxe você para o século XXI.
@@ -143,42 +134,25 @@ observação, evidências, hipóteses e dedução.
 PERMANEÇA NO PERSONAGEM DURANTE TODA A CONVERSA.
 """
 
-
-# =========================
-# CONFIGURAÇÃO DA PÁGINA
-# =========================
-
+# Config da página
 st.set_page_config(
-    page_title="Sherlock Holmes",
-    page_icon="🕵️",
+    page_title="Desafio Chatbot",
     layout="centered"
 )
 
-
-# =========================
-# CABEÇALHO
-# =========================
-
-st.title("🕵️ Sherlock Holmes")
-st.subheader("O Detetive de Cibersegurança")
-
+# Cabeçalho
+st.title("Sherlock Holmes")
 st.write(
     "Uma falha na máquina do tempo trouxe Sherlock Holmes "
     "para o século XXI. Ajude-o a investigar os mistérios "
     "dos golpes digitais."
 )
 
-
-# =========================
-# SIDEBAR
-# =========================
-
+# Sidebar
 with st.sidebar:
 
-    st.header("🔎 Central de Investigação")
-
+    st.header("Central de Investigação")
     st.write("Comandos disponíveis:")
-
     st.markdown("""
     **/analisar**  
     Analisa uma mensagem suspeita.
@@ -189,44 +163,33 @@ with st.sidebar:
     **/ajuda**  
     Mostra os comandos disponíveis.
     """)
-
+    
     st.divider()
+    
+    # Botão de nova conversa
+    if st.button("Nova investigação"):
+        st.session_state.messages = [] # Apaga histórico da conversa anterior
+        st.rerun() # Força o Streamlit executar novamente o código
 
-    if st.button("🗑️ Nova investigação"):
-        st.session_state.messages = []
-        st.rerun()
 
-
-# =========================
-# MEMÓRIA DA CONVERSA
-# =========================
-
+# Criando memória da conversa
 if "messages" not in st.session_state:
+    # session_state: Objeto do Streamlit que permite quardar informações entre as atualizaçõs da página
     st.session_state.messages = []
 
-
-# =========================
-# MOSTRAR HISTÓRICO
-# =========================
-
+# Histórico
 for message in st.session_state.messages:
-
+    # Rendeiza bloco de conversa
     with st.chat_message(message["role"]):
-
         st.markdown(message["content"])
 
-
-# =========================
-# INPUT DO USUÁRIO
-# =========================
-
-pergunta = st.chat_input(
+# Input do usuário
+# O que o usuário digitar será armazenado em pergunta
+pergunta = st.chat_input( 
     "Conte-me o mistério que deseja investigar..."
 )
 
-
 if pergunta:
-
     # Mostra mensagem do usuário
     with st.chat_message("user"):
         st.markdown(pergunta)
@@ -239,33 +202,39 @@ if pergunta:
         }
     )
 
-    # Monta histórico para a Groq
+    # Criando as mensagens para a API do Groq
     messages = [
         {
             "role": "system",
-            "content": SYSTEM_PROMPT
+            "content": PROMPT
         }
     ]
 
+    # Adicionando o histórico
+    # Permite que o modelo lembre da conversa anterior enquanto ela estiver no session_state
     messages.extend(st.session_state.messages)
 
     # Resposta da IA
     with st.chat_message("assistant"):
 
-        with st.spinner("🔎 Investigando as evidências..."):
+        # Indicador de carregamento
+        with st.spinner("Investigando as evidências..."):
 
             try:
-
+                # Pedindo para o modelo gerar uma resposta
                 resposta = client.chat.completions.create(
-                    model="llama-3.3-70b-versatile",
-                    messages=messages,
-                    temperature=0.7
+                    model="openai/gpt-oss-120b",
+                    messages=messages, # messages = prompt + histórico + mensagem atual
+                    temperature=0.7 # equilíbrio entre consistência e criatividade
                 )
 
+                # Pegando a primeira resposta do retorno da API
                 texto = resposta.choices[0].message.content
 
+                # Mostrando resposta
                 st.markdown(texto)
 
+            # Caso ocorra algum erro:
             except Exception as e:
 
                 texto = (
@@ -276,7 +245,7 @@ if pergunta:
 
                 st.error(texto)
 
-    # Salva resposta
+    # Salva a resposta do modelo no histórico
     st.session_state.messages.append(
         {
             "role": "assistant",

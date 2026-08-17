@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Do zero ao chatbot — IA local com Ollama + Python</title>
+    <style>
+        :root {
+            --papel: #E5E7E1;
+            --papel-alto: #F4F5F1;
+            --tinta: #131F2C;
+            --tinta-2: #5A6673;
+            --amarelo: #F2C230;
+            --amarelo-fraco: #FAE9AE;
+            --vermelho: #A32E1C;
+            --verde: #1F5C46;
+            --linha: #C6C9C0;
+            --term-bg: #0E1A24;
+            --term-fg: #DBE2DE;
+            --term-dim: #79899140;
+            --display: "Franklin Gothic Medium", "Arial Black", Impact, "Haettenschweiler", sans-serif;
+            --corpo: "Segoe UI", Candara, Optima, "Trebuchet MS", Verdana, sans-serif;
+            --mono: Consolas, Menlo, "DejaVu Sans Mono", "Courier New", monospace;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 70px
+        }
+
+        @media (prefers-reduced-motion:reduce) {
+            html {
+                scroll-behavior: auto
+            }
+
+            * {
+                animation: none !important;
+                transition: none !important
+            }
+        }
+
+        body {
+            margin: 0;
+            background: var(--papel);
+            color: var(--tinta);
+            font-family: var(--corpo);
+            font-size: 16px;
+            line-height: 1.6;
+            background-image: linear-gradient(var(--linha) 1px, transparent 1px), linear-gradient(90deg, var(--linha) 1px, transparent 1px);
+            background-size: 44px 44px;
+            background-position: -1px -1px;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: var(--papel);
+            opacity: .86;
+            pointer-events: none;
+            z-index: 0
+        }
+
+        .envelope {
+            position: relative;
+            z-index: 1
+        }
+
+        /* ---------- barra de progresso ---------- */
+        #barra {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: #00000012;
+            z-index: 60
+        }
+
+        #barra i {
+            display: block;
+            height: 100%;
+            width: 0;
+            background: var(--amarelo);
+            transition: width .25s ease
+        }
+
+        /* ---------- cabeçalho ---------- */
+        header {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 54px 28px 26px
+        }
+
+        .selo {
+            display: inline-block;
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            color: var(--tinta);
+            background: var(--amarelo);
+            padding: 5px 11px;
+            margin-bottom: 20px
+        }
+
+        h1 {
+            font-family: var(--display);
+            font-weight: 500;
+            font-size: clamp(38px, 7vw, 76px);
+            line-height: .92;
+            letter-spacing: -.015em;
+            text-transform: uppercase;
+            margin: 0 0 6px
+        }
+
+        h1 em {
+            font-style: normal;
+            display: block;
+            color: var(--tinta-2)
+        }
+
+        .linhafina {
+            max-width: 60ch;
+            font-size: 17.5px;
+            color: var(--tinta-2);
+            margin: 16px 0 30px
+        }
+
+        .fichatec {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+            border: 1.5px solid var(--tinta);
+            max-width: 900px;
+            background: var(--papel-alto)
+        }
+
+        .fichatec div {
+            flex: 1 1 175px;
+            padding: 12px 15px;
+            border-right: 1px solid var(--linha)
+        }
+
+        .fichatec div:last-child {
+            border-right: 0
+        }
+
+        .fichatec dt {
+            font-family: var(--mono);
+            font-size: 10.5px;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: var(--tinta-2);
+            margin-bottom: 3px
+        }
+
+        .fichatec dd {
+            margin: 0;
+            font-weight: 600;
+            font-size: 15px
+        }
+
+        /* ---------- seletor de sistema ---------- */
+        .so {
+            position: sticky;
+            top: 5px;
+            z-index: 50;
+            background: var(--papel);
+            border-top: 1px solid var(--linha);
+            border-bottom: 1.5px solid var(--tinta)
+        }
+
+        .so-in {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 9px 28px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap
+        }
+
+        .so-rot {
+            font-family: var(--mono);
+            font-size: 10.5px;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: var(--tinta-2)
+        }
+
+        .so button {
+            font-family: var(--corpo);
+            font-size: 14px;
+            font-weight: 600;
+            padding: 6px 15px;
+            cursor: pointer;
+            background: transparent;
+            color: var(--tinta-2);
+            border: 1.5px solid transparent;
+            border-radius: 0
+        }
+
+        .so button:hover {
+            color: var(--tinta)
+        }
+
+        .so button[aria-pressed="true"] {
+            background: var(--tinta);
+            color: var(--papel-alto)
+        }
+
+        .so button:focus-visible {
+            outline: 3px solid var(--amarelo);
+            outline-offset: 1px
+        }
+
+        .contador {
+            margin-left: auto;
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--tinta-2)
+        }
+
+        .contador b {
+            color: var(--tinta)
+        }
+
+        /* ---------- layout ---------- */
+        .corpo {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 34px 28px 90px;
+            display: grid;
+            grid-template-columns: 212px 1fr;
+            gap: 44px;
+            align-items: start
+        }
+
+        nav.trilha {
+            position: sticky;
+            top: 74px
+        }
+
+        nav.trilha h2 {
+            font-family: var(--mono);
+            font-size: 10.5px;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+            color: var(--tinta-2);
+            margin: 0 0 12px;
+            font-weight: 400
+        }
+
+        nav.trilha ol {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            border-left: 1.5px solid var(--linha)
+        }
+
+        nav.trilha a {
+            display: flex;
+            gap: 9px;
+            align-items: baseline;
+            text-decoration: none;
+            color: var(--tinta-2);
+            font-size: 13.5px;
+            line-height: 1.3;
+            padding: 7px 0 7px 12px;
+            margin-left: -1.5px;
+            border-left: 1.5px solid transparent
+        }
+
+        nav.trilha a:hover {
+            color: var(--tinta)
+        }
+
+        nav.trilha a.ativo {
+            color: var(--tinta);
+            font-weight: 700;
+            border-left-color: var(--amarelo);
+            background: var(--amarelo-fraco)
+        }
+
+        nav.trilha a.feito .num::after {
+            content: "✓";
+            margin-left: 3px;
+            color: var(--verde)
+        }
+
+        nav.trilha .num {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--tinta-2)
+        }
+
+        /* ---------- etapas ---------- */
+        section.etapa {
+            margin: 0 0 62px;
+            scroll-margin-top: 74px
+        }
+
+        .cabeca {
+            display: flex;
+            align-items: flex-start;
+            gap: 18px;
+            border-top: 2.5px solid var(--tinta);
+            padding-top: 14px;
+            margin-bottom: 18px
+        }
+
+        .ordinal {
+            font-family: var(--display);
+            font-size: 52px;
+            line-height: .8;
+            letter-spacing: -.02em;
+            color: var(--amarelo);
+            -webkit-text-stroke: 1.5px var(--tinta);
+            flex: 0 0 auto
+        }
+
+        .cabeca h3 {
+            font-family: var(--display);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: -.005em;
+            font-size: clamp(23px, 3.4vw, 32px);
+            line-height: 1.02;
+            margin: 2px 0 5px
+        }
+
+        .tempo {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--tinta-2)
+        }
+
+        .etapa p {
+            max-width: 66ch
+        }
+
+        .etapa p.destaque {
+            font-size: 17px
+        }
+
+        mark {
+            background: var(--amarelo-fraco);
+            padding: 0 3px
+        }
+
+        kbd {
+            font-family: var(--mono);
+            font-size: .82em;
+            border: 1px solid var(--tinta-2);
+            border-bottom-width: 2px;
+            padding: 1px 5px;
+            background: var(--papel-alto)
+        }
+
+        code {
+            font-family: var(--mono);
+            font-size: .9em;
+            background: #00000010;
+            padding: 1px 5px;
+            white-space: nowrap
+        }
+
+        /* ---------- blocos de comando ---------- */
+        .bloco {
+            margin: 18px 0;
+            max-width: 820px
+        }
+
+        .bloco-topo {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            background: var(--tinta);
+            color: var(--papel-alto);
+            padding: 6px 12px
+        }
+
+        .bloco-topo .rot {
+            font-family: var(--mono);
+            font-size: 10.5px;
+            letter-spacing: .14em;
+            text-transform: uppercase
+        }
+
+        .bloco-topo .arq {
+            font-family: var(--mono);
+            font-size: 11.5px;
+            color: var(--amarelo)
+        }
+
+        .copiar {
+            margin-left: auto;
+            font-family: var(--mono);
+            font-size: 10.5px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            background: transparent;
+            color: var(--papel-alto);
+            border: 1px solid #ffffff40;
+            padding: 3px 9px;
+            cursor: pointer
+        }
+
+        .copiar:hover {
+            background: var(--amarelo);
+            color: var(--tinta);
+            border-color: var(--amarelo)
+        }
+
+        .copiar:focus-visible {
+            outline: 2px solid var(--amarelo);
+            outline-offset: 2px
+        }
+
+        pre {
+            margin: 0;
+            background: var(--term-bg);
+            color: var(--term-fg);
+            font-family: var(--mono);
+            font-size: 13.5px;
+            line-height: 1.62;
+            padding: 14px 16px;
+            overflow-x: auto;
+            tab-size: 4
+        }
+
+        pre .p {
+            color: var(--amarelo);
+            user-select: none
+        }
+
+        pre .c {
+            color: #8FA3A0
+        }
+
+        pre .novo {
+            display: block;
+            background: #F2C2301F;
+            box-shadow: inset 3px 0 0 var(--amarelo);
+            margin: 0 -16px;
+            padding: 0 13px
+        }
+
+        .saida {
+            background: var(--papel-alto);
+            border: 1px solid var(--linha);
+            border-top: 0;
+            font-family: var(--mono);
+            font-size: 12.5px;
+            color: var(--tinta-2);
+            padding: 11px 16px;
+            white-space: pre-wrap
+        }
+
+        /* ---------- conferência (assinatura) ---------- */
+        .confere {
+            max-width: 820px;
+            margin: 18px 0;
+            border: 1.5px solid var(--tinta);
+            background: var(--papel-alto);
+            display: grid;
+            grid-template-columns: 34px 1fr
+        }
+
+        .confere .faixa {
+            background: repeating-linear-gradient(-45deg, var(--amarelo) 0 8px, var(--tinta) 8px 16px)
+        }
+
+        .confere .txt {
+            padding: 13px 16px
+        }
+
+        .confere h4 {
+            font-family: var(--mono);
+            font-size: 10.5px;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+            margin: 0 0 7px;
+            color: var(--tinta)
+        }
+
+        .confere p {
+            margin: 0 0 8px;
+            font-size: 15px
+        }
+
+        .confere p:last-child {
+            margin-bottom: 0
+        }
+
+        .confere .tela {
+            font-family: var(--mono);
+            font-size: 12.5px;
+            background: var(--term-bg);
+            color: var(--term-fg);
+            padding: 9px 12px;
+            margin: 8px 0;
+            white-space: pre-wrap
+        }
+
+        details.travou {
+            max-width: 820px;
+            margin: 14px 0;
+            border-left: 3px solid var(--vermelho);
+            background: #A32E1C0D;
+            padding: 9px 15px
+        }
+
+        details.travou summary {
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14.5px;
+            color: var(--vermelho);
+            list-style: none
+        }
+
+        details.travou summary::-webkit-details-marker {
+            display: none
+        }
+
+        details.travou summary::before {
+            content: "▸ ";
+            font-size: 12px
+        }
+
+        details.travou[open] summary::before {
+            content: "▾ "
+        }
+
+        details.travou ul {
+            margin: 11px 0 4px;
+            padding-left: 19px;
+            font-size: 14.5px
+        }
+
+        details.travou li {
+            margin-bottom: 7px
+        }
+
+        .nota {
+            max-width: 820px;
+            margin: 18px 0;
+            padding: 12px 16px;
+            border: 1px dashed var(--tinta-2);
+            background: #ffffff55;
+            font-size: 14.5px
+        }
+
+        .nota>b:first-child {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: .13em;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 5px;
+            color: var(--verde)
+        }
+
+        .marcar {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            margin-top: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            border: 1.5px solid var(--tinta);
+            background: var(--papel-alto);
+            padding: 7px 14px
+        }
+
+        .marcar:hover {
+            background: var(--amarelo-fraco)
+        }
+
+        .marcar input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--verde);
+            cursor: pointer
+        }
+
+        /* ---------- tabela final ---------- */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 900px;
+            margin: 20px 0;
+            background: var(--papel-alto);
+            font-size: 14.5px
+        }
+
+        th {
+            background: var(--tinta);
+            color: var(--papel-alto);
+            text-align: left;
+            padding: 9px 12px;
+            font-family: var(--mono);
+            font-size: 10.5px;
+            letter-spacing: .13em;
+            text-transform: uppercase;
+            font-weight: 400
+        }
+
+        td {
+            border: 1px solid var(--linha);
+            padding: 9px 12px;
+            vertical-align: top
+        }
+
+        td:first-child {
+            font-family: var(--mono);
+            font-size: 12.5px;
+            width: 31%
+        }
+
+        footer {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 26px 28px 60px;
+            border-top: 1.5px solid var(--tinta);
+            font-size: 13px;
+            color: var(--tinta-2);
+            font-family: var(--mono)
+        }
+
+        [data-so] {
+            display: none
+        }
+
+        body.win [data-so~="win"],
+        body.mac [data-so~="mac"],
+        body.linux [data-so~="linux"] {
+            display: revert
+        }
+
+        .so-etiqueta {
+            display: none
+        }
+
+        @media(max-width:880px) {
+            .corpo {
+                grid-template-columns: 1fr;
+                gap: 0
+            }
+
+            nav.trilha {
+                display: none
+            }
+
+            .ordinal {
+                font-size: 40px
+            }
+        }
+
+        /* ---------- impressão A4 ---------- */
+        @media print {
+            @page {
+                size: A4;
+                margin: 14mm
+            }
+
+            body {
+                background: #fff;
+                font-size: 10.5pt;
+                line-height: 1.42
+            }
+
+            body::before,
+            #barra,
+            nav.trilha,
+            .so,
+            .copiar,
+            .marcar {
+                display: none !important
+            }
+
+            .envelope {
+                max-width: none
+            }
+
+            header {
+                padding: 0 0 12px
+            }
+
+            h1 {
+                font-size: 26pt
+            }
+
+            .corpo {
+                display: block;
+                padding: 0;
+                max-width: none
+            }
+
+            section.etapa {
+                margin-bottom: 20px;
+                page-break-inside: avoid
+            }
+
+            .bloco,
+            .confere,
+            table,
+            details.travou {
+                page-break-inside: avoid;
+                max-width: none
+            }
+
+            pre {
+                background: #fff;
+                color: #000;
+                border: 1px solid #999;
+                font-size: 9pt;
+                padding: 7px 9px
+            }
+
+            pre .p {
+                color: #666
+            }
+
+            pre .novo {
+                background: #eee;
+                box-shadow: inset 3px 0 0 #000;
+                margin: 0 -9px;
+                padding: 0 6px
+            }
+
+            .confere .faixa {
+                background: #000
+            }
+
+            details.travou {
+                border-left: 3px solid #000;
+                background: #f4f4f4
+            }
+
+            details.travou[open] summary::before,
+            details.travou summary::before {
+                content: ""
+            }
+
+            details.travou>* {
+                display: block !important
+            }
+
+            [data-so] {
+                display: revert !important
+            }
+
+            .so-etiqueta {
+                display: inline-block;
+                font-family: var(--mono);
+                font-size: 8pt;
+                background: #000;
+                color: #fff;
+                padding: 1px 5px;
+                margin-bottom: 3px
+            }
+
+            a {
+                color: #000;
+                text-decoration: none
+            }
+
+            .contador {
+                display: none
+            }
+        }
+    </style>
+</head>
+
+<body class="win">
+    <div id="barra"><i></i></div>
+    <div class="envelope">
+
+        <header>
+            <span class="selo">Laboratório presencial · IA local</span>
+            <h1>Do zero ao chatbot<em>com IA rodando na sua máquina</em></h1>
+            <p class="linhafina">Dez etapas, do computador vazio até um programa em Python que lê avaliações de um
+                produto,
+                classifica o sentimento de cada uma com um modelo de linguagem local e responde perguntas sobre o
+                resultado.
+                Nenhuma conta, nenhuma chave de API, nenhum dado saindo da sala.</p>
+            <dl class="fichatec">
+                <div>
+                    <dt>Duração</dt>
+                    <dd>~110 minutos</dd>
+                </div>
+                <div>
+                    <dt>Máquina</dt>
+                    <dd>8 GB de RAM, 4 GB livres</dd>
+                </div>
+                <div>
+                    <dt>Instalar</dt>
+                    <dd>Ollama + Python</dd>
+                </div>
+                <div>
+                    <dt>Bibliotecas</dt>
+                    <dd>nenhuma (<code>pip</code> não entra aqui)</dd>
+                </div>
+                <div>
+                    <dt>Internet</dt>
+                    <dd>só na etapa 02</dd>
+                </div>
+            </dl>
+        </header>
+
+        <div class="so">
+            <div class="so-in">
+                <span class="so-rot">Sistema da sua máquina</span>
+                <button data-alvo="win" aria-pressed="true">Windows</button>
+                <button data-alvo="mac" aria-pressed="false">macOS</button>
+                <button data-alvo="linux" aria-pressed="false">Linux</button>
+                <span class="contador"><b id="feitos">0</b> / 10 etapas concluídas</span>
+            </div>
+        </div>
+
+        <div class="corpo">
+
+            <nav class="trilha" aria-label="Etapas da aula">
+                <h2>Etapas</h2>
+                <ol id="indice"></ol>
+            </nav>
+
+            <main>
+
+                <!-- ======================= 00 ======================= -->
+                <section class="etapa" id="e00" data-titulo="Checar a máquina">
+                    <div class="cabeca"><span class="ordinal">00</span>
+                        <div>
+                            <h3>Checar a máquina</h3><span class="tempo">5 min · todos juntos</span>
+                        </div>
+                    </div>
+
+                    <p class="destaque">Antes de instalar qualquer coisa, confirme que o Python já está aí. Abra o
+                        terminal
+                        <span data-so="win">— tecle <kbd>Win</kbd>, digite <b>PowerShell</b>, Enter —</span>
+                        <span data-so="mac">— <kbd>Cmd</kbd>+<kbd>Espaço</kbd>, digite <b>Terminal</b>, Enter —</span>
+                        <span data-so="linux">— <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>T</kbd> —</span>
+                        e rode:
+                    </p>
+
+                    <div class="bloco" data-so="win">
+                        <div class="bloco-topo"><span class="rot">PowerShell</span><span
+                                class="so-etiqueta">Windows</span><button class="copiar">copiar</button></div>
+                        <pre><span class="p">&gt;</span> python --version</pre>
+                    </div>
+                    <div class="bloco" data-so="mac linux">
+                        <div class="bloco-topo"><span class="rot">Terminal</span><span class="so-etiqueta">macOS /
+                                Linux</span><button class="copiar">copiar</button></div>
+                        <pre><span class="p">$</span> python3 --version</pre>
+                    </div>
+
+                    <div class="confere">
+                        <div class="faixa"></div>
+                        <div class="txt">
+                            <h4>Confira na tela</h4>
+                            <div class="tela">Python 3.12.3</div>
+                            <p>Qualquer versão <b>3.9 ou maior</b> serve. Se apareceu outra coisa, abra o "travou?"
+                                abaixo.</p>
+                        </div>
+                    </div>
+
+                    <details class="travou">
+                        <summary>Travou?</summary>
+                        <ul>
+                            <li><b data-so="win">"Python não foi encontrado"</b><b data-so="mac linux">"command not
+                                    found"</b> — o Python não está instalado.
+                                <span data-so="win">Instale pela Microsoft Store (procure "Python 3.12") ou por
+                                    python.org, marcando <mark>Add python.exe to PATH</mark>.</span>
+                                <span data-so="mac">Instale por python.org ou <code>brew install python</code>.</span>
+                                <span data-so="linux">Rode <code>sudo apt install python3</code>.</span>
+                            </li>
+                            <li data-so="win"><b>Abriu a Microsoft Store sozinha</b> — é o atalho falso do Windows.
+                                Tente <code>py --version</code>. Se funcionar, use <code>py</code> no lugar de
+                                <code>python</code> o resto da aula.</li>
+                            <li><b>Versão 2.7 ou 3.6</b> — instale uma versão atual; o código desta aula não roda em
+                                Python 2.</li>
+                        </ul>
+                    </details>
+
+                    <label class="marcar"><input type="checkbox" data-etapa="e00"> Etapa concluída</label>
+                </section>
+
+                <!-- ======================= 01 ======================= -->
+                <section class="etapa" id="e01" data-titulo="Instalar o Ollama">
+                    <div class="cabeca"><span class="ordinal">01</span>
+                        <div>
+                            <h3>Instalar o Ollama</h3><span class="tempo">10 min · cada um na sua máquina</span>
+                        </div>
+                    </div>
+
+                    <p class="destaque">O Ollama é o programa que carrega o modelo de IA e o mantém disponível na sua
+                        máquina.
+                        Ele não é a IA — é o motor que roda a IA, do mesmo jeito que o navegador não é o site.</p>
+
+                    <div data-so="win">
+                        <p>Baixe o instalador em <b>ollama.com/download/windows</b> (tem uns 5 MB) e dê dois cliques.
+                            <mark>Não precisa de senha
+                                de administrador</mark> — ele instala na sua pasta de usuário, o que resolve a vida em
+                            laboratório com máquina travada.
+                            Ou, se preferir uma linha só:</p>
+                        <div class="bloco">
+                            <div class="bloco-topo"><span class="rot">PowerShell</span><span
+                                    class="so-etiqueta">Windows</span><button class="copiar">copiar</button></div>
+                            <pre><span class="p">&gt;</span> irm https://ollama.com/install.ps1 | iex</pre>
+                        </div>
+                    </div>
+
+                    <div data-so="mac">
+                        <p>Baixe o <code>.dmg</code> em <b>ollama.com/download/mac</b> e arraste para a pasta
+                            Aplicativos. Ou, se você já usa Homebrew:</p>
+                        <div class="bloco">
+                            <div class="bloco-topo"><span class="rot">Terminal</span><span
+                                    class="so-etiqueta">macOS</span><button class="copiar">copiar</button></div>
+                            <pre><span class="p">$</span> brew install ollama</pre>
+                        </div>
+                    </div>
+
+                    <div data-so="linux">
+                        <p>Uma linha no terminal instala e já sobe o serviço:</p>
+                        <div class="bloco">
+                            <div class="bloco-topo"><span class="rot">Terminal</span><span
+                                    class="so-etiqueta">Linux</span><button class="copiar">copiar</button></div>
+                            <pre><span class="p">$</span> curl -fsSL https://ollama.com/install.sh | sh</pre>
+                        </div>
+                    </div>
+
+                    <p><b>Agora feche o terminal e abra um novo.</b> Isso não é frescura: o terminal antigo não enxerga
+                        o comando recém-instalado.
+                        No terminal novo:</p>
+
+                    <div class="bloco">
+                        <div class="bloco-topo"><span class="rot">Terminal novo</span><button
+                                class="copiar">copiar</button></div>
+                        <pre><span class="p">&gt;</span> ollama --version</pre>
+                    </div>
+
+                    <div class="confere">
+                        <div class="faixa"></div>
+                        <div class="txt">
+                            <h4>Confira na tela</h4>
+                            <div class="tela">ollama version is 0.30.x</div>
+                            <p data-so="win">E um ícone de lhama apareceu perto do relógio, no canto inferior direito.
+                            </p>
+                            <p data-so="mac">E um ícone de lhama apareceu na barra superior da tela.</p>
+                            <p data-so="linux">O serviço já está rodando em segundo plano via systemd.</p>
+                        </div>
+                    </div>
+
+                    <details class="travou">
+                        <summary>Travou?</summary>
+                        <ul>
+                            <li data-so="win"><b>Aviso azul do Windows SmartScreen</b> — clique em <mark>Mais
+                                    informações → Executar assim mesmo</mark>.</li>
+                            <li data-so="win"><b>O Firewall pediu permissão</b> — marque <mark>Redes privadas</mark> e
+                                permita. Isso libera o acesso em <code>localhost</code>, não expõe nada para a internet.
+                            </li>
+                            <li><b>"ollama não é reconhecido como comando"</b> — você continuou no terminal velho. Feche
+                                tudo e abra outro.</li>
+                            <li><b>Instalador barrado pela política do laboratório</b> — pule para a caixa cinza da
+                                etapa 02: dá para usar o Ollama de uma máquina só, pela rede.</li>
+                        </ul>
+                    </details>
+
+                    <label class="marcar"><input type="checkbox" data-etapa="e01"> Etapa concluída</label>
+                </section>
+
+                <!-- ======================= 02 ======================= -->
+                <section class="etapa" id="e02" data-titulo="Baixar o modelo">
+                    <div class="cabeca"><span class="ordinal">02</span>
+                        <div>
+                            <h3>Baixar o modelo</h3><span class="tempo">15 min · depende da internet da escola</span>
+                        </div>
+                    </div>
+
+                    <p class="destaque">O Ollama está instalado mas está vazio. Agora vem o modelo em si: uns 2 GB de
+                        números
+                        que codificam tudo que ele sabe sobre linguagem.</p>
+
+                    <div class="bloco">
+                        <div class="bloco-topo"><span class="rot">Terminal</span><button class="copiar">copiar</button>
+                        </div>
+                        <pre><span class="p">&gt;</span> ollama pull llama3.2:3b</pre>
+                    </div>
+
+                    <p>Enquanto baixa: <b>3b</b> quer dizer 3 bilhões de parâmetros. O ChatGPT e o Claude têm centenas
+                        de vezes mais.
+                        Esse tamanho é escolha consciente — cabe em 8 GB de RAM, roda sem placa de vídeo e erra o
+                        suficiente
+                        para a gente ter assunto na etapa 06.</p>
+
+                    <div class="bloco">
+                        <div class="bloco-topo"><span class="rot">Terminal</span><button class="copiar">copiar</button>
+                        </div>
+                        <pre><span class="p">&gt;</span> ollama list</pre>
+                    </div>
+
+                    <div class="confere">
+                        <div class="faixa"></div>
+                        <div class="txt">
+                            <h4>Confira na tela</h4>
+                            <div class="tela">NAME ID SIZE MODIFIED
+                                llama3.2:3b a80c4f17acd5 2.0 GB 2 minutes ago</div>
+                            <p>O modelo está no disco. <mark>A partir daqui você pode desligar a internet</mark> — e
+                                vamos fazer exatamente isso na etapa 03.</p>
+                        </div>
+                    </div>
+
+                    <div class="nota"><b>Para o professor · gargalo de rede</b>
+                        Trinta alunos baixando 2 GB ao mesmo tempo são 60 GB e uma aula perdida. Três saídas:
+                        <b>(1)</b>
+                        pedir o <code>pull</code> como tarefa de casa na aula anterior;
+                        <b>(2)</b>
+                        rodar o Ollama em <b>uma</b> máquina com <code>OLLAMA_HOST=0.0.0.0 ollama serve</code> e os
+                        alunos trocarem
+                        <code>localhost</code> pelo IP dela no código;
+                        <b>(3)</b>
+                        copiar a pasta de modelos por pendrive
+                        (<span data-so="win"><code>%HOMEPATH%\.ollama\models</code></span><span
+                            data-so="mac linux"><code>~/.ollama/models</code></span>).
+                        A opção 2 também salva quem não conseguiu instalar na etapa 01.
+                    </div>
+
+                    <details class="travou">
+                        <summary>Travou?</summary>
+                        <ul>
+                            <li><b>Download travou no meio</b> — <kbd>Ctrl</kbd>+<kbd>C</kbd> e rode o <code>pull</code>
+                                de novo. Ele continua de onde parou.</li>
+                            <li><b>Máquina com 4 GB de RAM</b> — troque por <code>llama3.2:1b</code> (1,3 GB). Responde
+                                bem mais rápido e erra bem mais; anote os erros, eles viram discussão.</li>
+                            <li><b>Quer testar outro modelo</b> — <code>gemma3:4b</code> e <code>qwen2.5:3b</code>
+                                também lidam bem com português. Se trocar, lembre de trocar o nome dentro do código
+                                depois.</li>
+                        </ul>
+                    </details>
+
+                    <label class="marcar"><input type="checkbox" data-etapa="e02"> Etapa concluída</label>
+                </section>
+
+                <!-- ======================= 03 ======================= -->
+                <section class="etapa" id="e03" data-titulo="Conversar no terminal">
+                    <div class="cabeca"><span class="ordinal">03</span>
+                        <div>
+                            <h3>Conversar no terminal</h3><span class="tempo">8 min · momento "uau"</span>
+                        </div>
+                    </div>
+
+                    <p class="destaque">Antes de escrever uma linha de Python, converse com o modelo direto.</p>
+
+                    <div class="bloco">
+                        <div class="bloco-topo"><span class="rot">Terminal</span><button class="copiar">copiar</button>
+                        </div>
+                        <pre><span class="p">&gt;</span> ollama run llama3.2:3b</pre>
+                    </div>
+
+                    <p>A primeira resposta demora mais: o modelo está subindo para a memória. Pergunte qualquer coisa,
+                        depois
+                        peça algo em português, depois peça uma piada ruim. Para sair, digite <code>/bye</code>.</p>
+
+                    <div class="confere">
+                        <div class="faixa"></div>
+                        <div class="txt">
+                            <h4>Faça isto agora, na frente da turma</h4>
+                            <p><b>Desligue o Wi-Fi</b> — de verdade, tire da rede — e pergunte de novo.</p>
+                            <p>Continua respondendo. Não tem servidor, não tem conta, não tem cobrança por token. O
+                                modelo está
+                                no disco de vocês e a conversa não sai da sala. É essa a diferença que a aula toda
+                                depende de vocês entenderem.</p>
+                        </div>
+                    </div>
+
+                    <div class="nota"><b>Pergunta para a turma</b>
+                        Se ele funciona sem internet, onde ele "procurou" a resposta? E o que acontece se eu perguntar
+                        quem ganhou
+                        o jogo de ontem?</div>
+
+                    <label class="marcar"><input type="checkbox" data-etapa="e03"> Etapa concluída</label>
+                </section>
+
+                <!-- ======================= 04 ======================= -->
+                <section class="etapa" id="e04" data-titulo="Achar o servidor local">
+                    <div class="cabeca"><span class="ordinal">04</span>
+                        <div>
+                            <h3>Achar o servidor local</h3><span class="tempo">7 min · a ponte para o código</span>
+                        </div>
+                    </div>
+
+                    <p class="destaque">Aquele terminal bonitinho é só uma casca. Por baixo, o Ollama subiu um
+                        <b>servidor HTTP</b>
+                        na sua própria máquina. Abra o navegador em:</p>
+
+                    <div class="bloco">
+                        <div class="bloco-topo"><span class="rot">Navegador</span><button class="copiar">copiar</button>
+                        </div>
+                        <pre>http://localhost:11434</pre>
+                    </div>
+
+                    <div class="confere">
+                        <div class="faixa"></div>
+                        <div class="txt">
+                            <h4>Confira na tela</h4>
+                            <div class="tela">Ollama is running</div>
+                            <p>Agora troque para <code>http://localhost:11434/api/tags</code>. Vem um JSON com a lista
+                                dos modelos
+                                que você baixou.</p>
+                        </div>
+                    </div>
+
+                    <p><b>Esta é a virada da aula.</b> Se o modelo atende em um endereço HTTP, então qualquer programa
+                        que saiba
+                        fazer uma requisição consegue falar com ele: Python, Java, C#, JavaScript, um app de celular na
+                        mesma rede.
+                        Nas próximas etapas nós somos só mais um cliente desse servidor.</p>
+
+                    <details class="travou">
+                        <summary>Travou?</summary>
+                        <ul>
+                            <li><b>Página não carrega</b> — o serviço caiu. Rode <code>ollama serve</code> num terminal
+                                e <mark>deixe esse terminal aberto</mark> o resto da aula.</li>
+                            <li><b>"address already in use"</b> — ele já estava rodando. Ótimo, era isso que a gente
+                                queria. Volte ao navegador.</li>
+                            <li><b>Porta 11434 ocupada por outra coisa</b> — <span
+                                    data-so="win"><code>netstat -ano | findstr 11434</code></span><span
+                                    data-so="mac linux"><code>lsof -i :11434</code></span> mostra quem é.</li>
+                        </ul>
+                    </details>
+
+                    <label class="marcar"><input type="checkbox" data-etapa="e04"> Etapa concluída</label>
+                </section>
+
+                <!-- ======================= 05 ======================= -->
+                <section class="etapa" id="e05" data-titulo="Primeira chamada em Python">
+                    <div class="cabeca"><span class="ordinal">05</span>
+                        <div>
+                            <h3>Primeira chamada em Python</h3><span class="tempo">15 min · digitando junto</span>
+                        </div>
+                    </div>
+
+                    <p class="destaque">Crie uma pasta para a aula, e dentro dela o arquivo <code>analisador.py</code>.
+                        Esse arquivo vai crescer nas próximas quatro etapas — não crie um novo a cada passo.</p>
+
+                    <div class="bloco">
+                        <div class="bloco-topo"><span class="rot">Arquivo</span><span
+                                class="arq">analisador.py</span><button class="copiar">copiar</button></div>
+                        <pre><span class="c"># Fala com o modelo que esta rodando na sua propria maquina.</span>
+import json
+import urllib.request
+
+MODELO = "llama3.2:3b"
+URL = "http://localhost:11434/api/chat"
+
+corpo = {
+    "model": MODELO,
+    "messages": [{"role": "user", "content": "Diga ola em uma frase curta."}],
+    "stream": False,
+}
+
+requisicao = urllib.request.Request(
+    URL,
+    data=json.dumps(corpo).encode("utf-8"),
+    headers={"Content-Type": "application/json"},
+)
+
+with urllib.request.urlopen(requisicao) as conexao:
+    resposta = json.loads(conexao.read())
+
+print(resposta["message"]["content"])</pre>
+                    </div>
+
+                    <div class="bloco">
+                        <div class="bloco-topo"><span class="rot">Terminal</span><button class="copiar">copiar</button>
+                        </div>
+                        <pre><span class="p">&gt;</span> <span data-so="win">python</span><span data-so="mac linux">python3</span> analisador.py</pre>
+                    </div>
+
+                    <div class="confere">
+                        <div class="faixa"></div>
+                        <div class="txt">
+                            <h4>Confira na tela</h4>
+                            <div class="tela">Olá! Como posso ajudar você hoje?</div>
+                            <p>Repare no que <b>não</b> aconteceu: nenhum <code>pip install</code>, nenhuma chave de
+                                API, nenhum cadastro.
+                                <code>urllib</code> já vem com o Python.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="nota"><b>Leia o código, não só rode</b>
+                        Três peças e nada mais: um <b>dicionário</b> com o pedido, um <b>POST</b> para o endereço, e um
+                        <b>JSON</b> de volta.
+                        <code>"stream": False</code> significa "me manda tudo de uma vez em vez de palavra por palavra".
+                        Toda API de IA do mercado — OpenAI, Anthropic, Google — tem essa mesma forma. Quem entendeu isso
+                        aqui, entendeu todas.
+                    </div>
+
+                    <details class="travou">
+                        <summary>Travou?</summary>
+                        <ul>
+                            <li><b><code>URLError</code> ou <code>ConnectionRefusedError</code></b> — o Ollama não está
+                                no ar. Volte à etapa 04 e rode <code>ollama serve</code>.</li>
+                            <li><b><code>model "llama3.2:3b" not found</code></b> — o nome em <code>MODELO</code> não
+                                bate com o que apareceu no <code>ollama list</code>. Copie exatamente.</li>
+                            <li><b>Demorou mais de um minuto</b> — normal na primeira execução sem placa de vídeo. Da
+                                segunda em diante o modelo já está na memória.</li>
+                            <li data-so="win"><b><code>UnicodeEncodeError</code> ao imprimir acentos</b> — rode
+                                <code>chcp 65001</code> antes, ou <code>$env:PYTHONUTF8=1</code>.</li>
+                        </ul>
+                    </details>
+
+                    <label class="marcar"><input type="checkbox" data-etapa="e05"> Etapa concluída</label>
+                </section>
+
+                <!-- ======================= 06 ======================= -->
+                <section class="etapa" id="e06" data-titulo="Classificar uma avaliação">
+                    <div class="cabeca"><span class="ordinal">06</span>
+                        <div>
+                            <h3>Classificar uma avaliação</h3><span class="tempo">15 min · vai dar errado de
+                                propósito</span>
+                        </div>
+                    </div>
+
+                    <p class="destaque">Agora damos uma tarefa ao modelo. Troque tudo que está depois de
+                        <code>URL = ...</code>
+                        por isto — as linhas com a barra amarela são as novas:</p>
+
+                    <div class="bloco">
+                        <div class="bloco-topo"><span class="rot">Arquivo</span><span class="arq">analisador.py · a
+                                partir da linha 7</span><button class="copiar">copiar</button></div>
+                        <pre><span class="novo"><span class="c"># Uma funcao so, para nao repetir o mesmo bloco toda hora.</span></span>
+<span class="novo">def perguntar(mensagens):</span>
+<span class="novo">    corpo = {</span>
+<span class="novo">        "model": MODELO,</span>
+<span class="novo">        "messages": mensagens,</span>
+<span class="novo">        "stream": False,</span>
+<span class="novo">        "options": {"temperature": 0},</span>
+<span class="novo">    }</span>
+<span class="novo">    requisicao = urllib.request.Request(</span>
+<span class="novo">        URL,</span>
+<span class="novo">        data=json.dumps(corpo).encode("utf-8"),</span>
+<span class="novo">        headers={"Content-Type": "application/json"},</span>
+<span class="novo">    )</span>
+<span class="novo">    with urllib.request.urlopen(requisicao, timeout=180) as conexao:</span>
+<span class="novo">        return json.loads(conexao.read())["message"]["content"]</span>
+<span class="novo"></span>
+<span class="novo"></span>
+<span class="novo">INSTRUCAO = """Voce classifica avaliacoes de produtos em portugues do Brasil.</span>
+<span class="novo">Responda com um JSON contendo:</span>
+<span class="novo">- sentimento: "positivo", "neutro" ou "negativo"</span>
+<span class="novo">- motivo: no maximo 10 palavras</span>
+<span class="novo">Ironia conta como o sentimento real, nao o literal."""</span>
+<span class="novo"></span>
+<span class="novo">texto = "Chegou rapido, mas o lado direito veio mudo."</span>
+<span class="novo"></span>
+<span class="novo">saida = perguntar([</span>
+<span class="novo">    {"role": "system", "content": INSTRUCAO},</span>
+<span class="novo">    {"role": "user", "content": texto},</span>
+<span class="novo">])</span>
+<span class="novo"></span>
+<span class="novo">print("--- o que o modelo devolveu ---")</span>
+<span class="novo">print(saida)</span>
+<span class="novo">print("--- tentando usar como dado ---")</span>
+<span class="novo">print(json.loads(saida)["sentimento"])</span></pre>
+                    </div>
+
+                    <div class="confere">
+                        <div class="faixa"></div>
+                        <div class="txt">
+                            <h4>Compare com o colega do lado</h4>
+                            <p>Cada máquina vai imprimir uma coisa diferente. Alguns recebem o JSON limpo. Outros
+                                recebem
+                                <code>Claro! Aqui está: {...}</code>, ou o JSON dentro de crases, ou um texto explicando
+                                a classificação.
+                            </p>
+                            <div class="tela">json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+                            </div>
+                            <p><mark>Esse erro é o conteúdo da aula</mark>, não um acidente. Pedir educadamente
+                                "responda em JSON"
+                                funciona quase sempre — e "quase sempre" é inaceitável num programa que precisa rodar
+                                sozinho em 500 avaliações.</p>
+                        </div>
+                    </div>
+
+                    <div class="nota"><b>Pergunta para a turma</b>
+                        Por que <code>"temperature": 0</code>? Suba para <code>1.5</code>, rode três vezes e veja.
+                        Classificar não é escrever poesia:
+                        aqui a gente quer a resposta mais provável, sempre a mesma.</div>
+
+                    <label class="marcar"><input type="checkbox" data-etapa="e06"> Etapa concluída</label>
+                </section>
+
+                <!-- ======================= 07 ======================= -->
+                <section class="etapa" id="e07" data-titulo="Forçar o formato">
+                    <div class="cabeca"><span class="ordinal">07</span>
+                        <div>
+                            <h3>Forçar o formato</h3><span class="tempo">12 min · o conserto</span>
+                        </div>
+                    </div>
+
+                    <p class="destaque">O Ollama aceita um <b>esquema JSON</b> no campo <code>format</code>. Com ele, o
+                        modelo fica
+                        proibido de gerar qualquer coisa que não encaixe no formato — não é pedido, é restrição na hora
+                        de escolher cada palavra.</p>
+
+                    <p>Duas mudanças. Primeiro, a função <code>perguntar</code> passa a aceitar um formato:</p>
+
+                    <div class="bloco">
+                        <div class="bloco-topo"><span class="rot">Arquivo</span><span class="arq">analisador.py · função
+                                perguntar</span><button class="copiar">copiar</button></div>
+                        <pre><span class="novo">def perguntar(mensagens, formato=None):</span>
+    corpo = {
+        "model": MODELO,
+        "messages": mensagens,
+        "stream": False,
+        "options": {"temperature": 0},
+    }
+<span class="novo">    if formato is not None:</span>
+<span class="novo">        corpo["format"] = formato</span>
+    requisicao = urllib.request.Request(</pre>
+                    </div>
+
+                    <p>Depois, o esquema e a chamada usando ele:</p>
+
+                    <div class="bloco">
+                        <div class="bloco-topo"><span class="rot">Arquivo</span><span class="arq">analisador.py · depois
+                                de INSTRUCAO</span><button class="copiar">copiar</button></div>
+                        <pre><span class="novo">ESQUEMA = {</span>
+<span class="novo">    "type": "object",</span>
+<span class="novo">    "properties": {</span>
+<span class="novo">        "sentimento": {</span>
+<span class="novo">            "type": "string",</span>
+<span class="novo">            "enum": ["positivo", "neutro", "negativo"],</span>
+<span class="novo">        },</span>
+<span class="novo">        "motivo": {"type": "string"},</span>
+<span class="novo">    },</span>
+<span class="novo">    "required": ["sentimento", "motivo"],</span>
+<span class="novo">}</span>
+
+texto = "Chegou rapido, mas o lado direito veio mudo."
+
+saida = perguntar([
+    {"role": "system", "content": INSTRUCAO},
+    {"role": "user", "content": texto},
+<span class="novo">], formato=ESQUEMA)</span>
+
+print(saida)
+print(json.loads(saida)["sentimento"])</pre>
+                    </div>
+
+                    <div class="confere">
+                        <div class="faixa"></div>
+                        <div class="txt">
+                            <h4>Confira na tela</h4>
+                            <div class="tela">{"sentimento":"negativo","motivo":"produto chegou com defeito no lado
+                                direito"}
+                                negativo</div>
+                            <p>Agora roda em todas as máquinas. O <code>enum</code> é a parte mais importante do
+                                esquema:
+                                ele reduz o universo de respostas possíveis a exatamente três palavras.</p>
+                        </div>
+                    </div>
+
+                    <div class="nota"><b>Detalhe que a documentação recomenda</b>
+                        Manter a descrição dos campos também dentro da <code>INSTRUCAO</code>, em texto. O esquema
+                        garante o formato;
+                        a instrução em português explica o <i>significado</i> de cada campo. Os dois juntos funcionam
+                        melhor que cada um sozinho.</div>
+
+                    <label class="marcar"><input type="checkbox" data-etapa="e07"> Etapa concluída</label>
+                </section>
+
+                <!-- ======================= 08 ======================= -->
+                <section class="etapa" id="e08" data-titulo="Todas as avaliações e a média">
+                    <div class="cabeca"><span class="ordinal">08</span>
+                        <div>
+                            <h3>Todas as avaliações e a média</h3><span class="tempo">20 min · o programa de
+                                verdade</span>
+                        </div>
+                    </div>
+
+                    <p class="destaque">Salve o arquivo <code>avaliacoes.json</code> na mesma pasta (o professor
+                        distribui).
+                        São 15 avaliações de um fone de ouvido, com nota em estrelas e texto livre.</p>
+
+                    <div class="bloco">
+                        <div class="bloco-topo"><span class="rot">Arquivo</span><span class="arq">avaliacoes.json ·
+                                trecho</span><button class="copiar">copiar</button></div>
+                        <pre>{
+  "produto": "Fone de Ouvido Bluetooth AudioMax X200",
+  "avaliacoes": [
+    {"id": 1, "nota": 5, "texto": "Som limpo, grave presente e a bateria dura o dia inteiro."},
+    {"id": 2, "nota": 1, "texto": "Parou de carregar em duas semanas. Suporte nao respondeu."}
+  ]
+}</pre>
+                    </div>
+
+                    <p>Troque o teste de uma avaliação só pelo laço abaixo:</p>
+
+                    <div class="bloco">
+                        <div class="bloco-topo"><span class="rot">Arquivo</span><span class="arq">analisador.py ·
+                                substitui o teste do final</span><button class="copiar">copiar</button></div>
+                        <pre><span class="novo">def classificar(texto):</span>
+<span class="novo">    saida = perguntar([</span>
+<span class="novo">        {"role": "system", "content": INSTRUCAO},</span>
+<span class="novo">        {"role": "user", "content": texto},</span>
+<span class="novo">    ], formato=ESQUEMA)</span>
+<span class="novo">    return json.loads(saida)</span>
+<span class="novo"></span>
+<span class="novo"></span>
+<span class="novo">VALOR = {"positivo": 1, "neutro": 0, "negativo": -1}</span>
+<span class="novo"></span>
+<span class="novo">with open("avaliacoes.json", encoding="utf-8") as arquivo:</span>
+<span class="novo">    dados = json.load(arquivo)</span>
+<span class="novo"></span>
+<span class="novo">resultados = []</span>
+<span class="novo">for avaliacao in dados["avaliacoes"]:</span>
+<span class="novo">    analise = classificar(avaliacao["texto"])</span>
+<span class="novo">    analise["id"] = avaliacao["id"]</span>
+<span class="novo">    analise["nota"] = avaliacao["nota"]</span>
+<span class="novo">    analise["texto"] = avaliacao["texto"]</span>
+<span class="novo">    resultados.append(analise)</span>
+<span class="novo">    print("#%s %s estrelas -> %s" % (analise["id"], analise["nota"], analise["sentimento"]))</span>
+<span class="novo"></span>
+<span class="novo"><span class="c"># A conta e feita aqui, em Python. O modelo classificou; quem calcula somos nos.</span></span>
+<span class="novo">notas = [VALOR[r["sentimento"]] for r in resultados]</span>
+<span class="novo">media = sum(notas) / len(notas)</span>
+<span class="novo">positivas = notas.count(1)</span>
+<span class="novo">negativas = notas.count(-1)</span>
+<span class="novo"></span>
+<span class="novo">print()</span>
+<span class="novo">print("Produto:", dados["produto"])</span>
+<span class="novo">print("Avaliacoes:", len(notas))</span>
+<span class="novo">print("Media de sentimento: %+.2f  (escala -1 a +1)" % media)</span>
+<span class="novo">print("Positivas: %d   Negativas: %d" % (positivas, negativas))</span>
+<span class="novo">print("Qualidade percebida: %.1f / 10" % ((media + 1) * 5))</span></pre>
+                    </div>
+
+                    <div class="confere">
+                        <div class="faixa"></div>
+                        <div class="txt">
+                            <h4>Confira na tela</h4>
+                            <div class="tela">#1 5 estrelas -> positivo
+                                #2 1 estrelas -> negativo
+                                ...
+                                Media de sentimento: +0.07 (escala -1 a +1)
+                                Positivas: 7 Negativas: 6
+                                Qualidade percebida: 5.3 / 10</div>
+                            <p>Sem placa de vídeo, cada avaliação leva de 2 a 8 segundos. As 15 levam um ou dois minutos
+                                —
+                                tempo suficiente para você explicar a próxima caixa.</p>
+                        </div>
+                    </div>
+
+                    <div class="nota"><b>A regra da casa</b>
+                        <b>O modelo classifica. O Python calcula.</b>
+                        Ninguém pediu a média ao modelo, e não foi por acaso: modelo de linguagem prevê a próxima
+                        palavra,
+                        não soma. Uma frase que parece um número não é um número. Guarde essa divisão de trabalho —
+                        ela vale para todo sistema com IA dentro.
+                    </div>
+
+                    <div class="nota"><b>Investigue os números</b>
+                        Procure no <code>avaliacoes.json</code> a de 5 estrelas com "Maravilhoso, né? Só que não" e a de
+                        5 estrelas com "Custo benefício absurdo". O modelo acertou as duas? Uma contagem de palavras
+                        positivas
+                        e negativas erraria as duas — a primeira por sarcasmo, a segunda porque "absurdo" aqui é elogio.
+                        É por isso que vale a pena usar um modelo de linguagem em vez de uma lista de palavras.</div>
+
+                    <label class="marcar"><input type="checkbox" data-etapa="e08"> Etapa concluída</label>
+                </section>
+
+                <!-- ======================= 09 ======================= -->
+                <section class="etapa" id="e09" data-titulo="Virar chatbot">
+                    <div class="cabeca"><span class="ordinal">09</span>
+                        <div>
+                            <h3>Virar chatbot</h3><span class="tempo">18 min · o fecho</span>
+                        </div>
+                    </div>
+
+                    <p class="destaque">Falta conversar com o resultado. A ideia é simples e é a mesma de qualquer
+                        sistema
+                        de perguntas e respostas sobre documentos: <b>colocamos os dados dentro da instrução do
+                            sistema</b>
+                        e o modelo só pode responder com base neles.</p>
+
+                    <div class="bloco">
+                        <div class="bloco-topo"><span class="rot">Arquivo</span><span class="arq">analisador.py ·
+                                adicione no final</span><button class="copiar">copiar</button></div>
+                        <pre><span class="novo"><span class="c"># Monta um resumo em texto de tudo que descobrimos.</span></span>
+<span class="novo">linhas = ["Produto: " + dados["produto"],</span>
+<span class="novo">          "Media de sentimento: %+.2f" % media,</span>
+<span class="novo">          "Positivas: %d, negativas: %d" % (positivas, negativas),</span>
+<span class="novo">          "", "Avaliacoes analisadas:"]</span>
+<span class="novo">for r in resultados:</span>
+<span class="novo">    linhas.append("#%s | %s estrelas | %s | %s"</span>
+<span class="novo">                  % (r["id"], r["nota"], r["sentimento"], r["texto"]))</span>
+<span class="novo"></span>
+<span class="novo">CONTEXTO = ("Voce responde perguntas sobre avaliacoes de um produto. "</span>
+<span class="novo">            "Use SOMENTE os dados abaixo. Se a resposta nao estiver neles, "</span>
+<span class="novo">            "diga que nao ha informacao. Responda em portugues do Brasil, "</span>
+<span class="novo">            "de forma curta.\n\n" + "\n".join(linhas))</span>
+<span class="novo"></span>
+<span class="novo">historico = [{"role": "system", "content": CONTEXTO}]</span>
+<span class="novo"></span>
+<span class="novo">print("\nChat aberto. Digite 'sair' para encerrar.\n")</span>
+<span class="novo">while True:</span>
+<span class="novo">    pergunta = input("voce > ").strip()</span>
+<span class="novo">    if pergunta.lower() in ("sair", "/sair", ""):</span>
+<span class="novo">        break</span>
+<span class="novo">    historico.append({"role": "user", "content": pergunta})</span>
+<span class="novo">    resposta = perguntar(historico)</span>
+<span class="novo">    historico.append({"role": "assistant", "content": resposta})</span>
+<span class="novo">    print("bot  >", resposta, "\n")</span></pre>
+                    </div>
+
+                    <div class="confere">
+                        <div class="faixa"></div>
+                        <div class="txt">
+                            <h4>Perguntas para testar em sala</h4>
+                            <div class="tela">voce > qual o problema que mais aparece?
+                                voce > resuma as reclamacoes sobre entrega
+                                voce > algum cliente falou do microfone?
+                                voce > quantas avaliacoes mencionam a bateria?</div>
+                            <p>A última é armadilha: ele vai chutar um número. <mark>Contar não é tarefa de modelo de
+                                    linguagem</mark> —
+                                é a mesma lição da etapa 08, agora vista do outro lado. Peça para alguém conferir na
+                                mão.</p>
+                        </div>
+                    </div>
+
+                    <div class="nota"><b>Repare no que o histórico faz</b>
+                        A lista <code>historico</code> cresce a cada turno e é enviada inteira toda vez. O modelo não
+                        guarda nada
+                        entre uma chamada e outra — a memória da conversa é uma lista Python na sua máquina. Todo
+                        chatbot que você
+                        já usou funciona assim.</div>
+
+                    <label class="marcar"><input type="checkbox" data-etapa="e09"> Etapa concluída</label>
+                </section>
+
+                <!-- ======================= extras ======================= -->
+                <section class="etapa" id="extras" data-titulo="Extensões e problemas">
+                    <div class="cabeca"><span class="ordinal">✳</span>
+                        <div>
+                            <h3>Se sobrar tempo</h3><span class="tempo">escolha uma</span>
+                        </div>
+                    </div>
+
+                    <ul style="max-width:66ch">
+                        <li>Adicionar um campo <code>aspecto</code> ao esquema (<code>entrega</code>,
+                            <code>qualidade</code>, <code>preco</code>, <code>atendimento</code>) e tirar a média por
+                            aspecto.</li>
+                        <li>Comparar o sentimento do texto com a nota em estrelas e listar as divergências — cliente que
+                            deu 5 estrelas reclamando.</li>
+                        <li>Trocar <code>llama3.2:3b</code> por <code>llama3.2:1b</code>, rodar de novo e medir quantas
+                            classificações mudaram.</li>
+                        <li>Envolver o <code>classificar</code> num <code>try/except</code> com duas tentativas, para o
+                            programa não morrer quando um JSON vier torto.</li>
+                        <li>Salvar o resultado em <code>resultado.json</code> e gerar um relatório em HTML a partir
+                            dele.</li>
+                    </ul>
+
+                    <h3 style="font-family:var(--display);text-transform:uppercase;font-weight:500;margin:34px 0 0">
+                        Erros mais comuns</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>O que aparece</th>
+                                <th>Por quê</th>
+                                <th>O que fazer</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ollama: comando não encontrado</td>
+                                <td>O terminal foi aberto antes da instalação</td>
+                                <td>Feche e abra outro terminal</td>
+                            </tr>
+                            <tr>
+                                <td>URLError / ConnectionRefused</td>
+                                <td>O servidor não está no ar</td>
+                                <td><code>ollama serve</code> num terminal separado</td>
+                            </tr>
+                            <tr>
+                                <td>model "..." not found</td>
+                                <td>Nome do modelo diferente do baixado</td>
+                                <td>Confira com <code>ollama list</code> e copie exato</td>
+                            </tr>
+                            <tr>
+                                <td>JSONDecodeError</td>
+                                <td>O modelo respondeu em prosa</td>
+                                <td>Faltou passar <code>formato=ESQUEMA</code></td>
+                            </tr>
+                            <tr>
+                                <td>Resposta em inglês</td>
+                                <td>Instrução fraca</td>
+                                <td>Reforce "responda em português do Brasil" na <code>INSTRUCAO</code></td>
+                            </tr>
+                            <tr>
+                                <td>Mais de 60 s por avaliação</td>
+                                <td>Sem GPU e modelo grande demais</td>
+                                <td>Use <code>llama3.2:1b</code> e feche o navegador</td>
+                            </tr>
+                            <tr>
+                                <td>UnicodeEncodeError (Windows)</td>
+                                <td>Terminal em codificação antiga</td>
+                                <td><code>chcp 65001</code> antes de rodar</td>
+                            </tr>
+                            <tr>
+                                <td>Respostas sem sentido no chat</td>
+                                <td>Contexto maior que a janela do modelo</td>
+                                <td>Envie menos avaliações ou aumente <code>num_ctx</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+            </main>
+        </div>
+
+        <footer>
+            Material de aula · IA local com Ollama + Python · nenhuma biblioteca externa · funciona offline após a etapa
+            02
+        </footer>
+    </div>
+
+    <script>
+        (function () {
+            "use strict";
+
+            /* seletor de sistema operacional */
+            var botoes = document.querySelectorAll(".so button");
+            botoes.forEach(function (b) {
+                b.addEventListener("click", function () {
+                    botoes.forEach(function (o) { o.setAttribute("aria-pressed", o === b ? "true" : "false"); });
+                    document.body.className = b.dataset.alvo;
+                });
+            });
+
+            /* botões de copiar */
+            document.querySelectorAll(".copiar").forEach(function (botao) {
+                botao.addEventListener("click", function () {
+                    var pre = botao.closest(".bloco").querySelector("pre").cloneNode(true);
+                    pre.querySelectorAll(".p").forEach(function (p) { p.remove(); });
+                    pre.querySelectorAll("[data-so]").forEach(function (el) {
+                        if (!el.dataset.so.split(" ").includes(document.body.className)) el.remove();
+                    });
+                    var texto = pre.textContent.trim();
+                    var ok = function () {
+                        var antes = botao.textContent;
+                        botao.textContent = "copiado";
+                        setTimeout(function () { botao.textContent = antes; }, 1400);
+                    };
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(texto).then(ok, function () { manual(texto, ok); });
+                    } else { manual(texto, ok); }
+                });
+            });
+            function manual(texto, ok) {
+                var a = document.createElement("textarea");
+                a.value = texto; a.style.position = "fixed"; a.style.opacity = "0";
+                document.body.appendChild(a); a.select();
+                try { document.execCommand("copy"); ok(); } catch (e) { }
+                document.body.removeChild(a);
+            }
+
+            /* índice lateral */
+            var secoes = Array.prototype.slice.call(document.querySelectorAll("section.etapa"));
+            var indice = document.getElementById("indice");
+            secoes.forEach(function (s) {
+                var num = s.querySelector(".ordinal").textContent;
+                var li = document.createElement("li");
+                li.innerHTML = '<a href="#' + s.id + '"><span class="num">' + num + '</span><span>' + s.dataset.titulo + '</span></a>';
+                indice.appendChild(li);
+            });
+            var links = {};
+            indice.querySelectorAll("a").forEach(function (a) { links[a.getAttribute("href").slice(1)] = a; });
+
+            /* etapa ativa + barra de progresso de rolagem */
+            if ("IntersectionObserver" in window) {
+                var obs = new IntersectionObserver(function (entradas) {
+                    entradas.forEach(function (e) {
+                        if (e.isIntersecting) {
+                            for (var k in links) links[k].classList.remove("ativo");
+                            if (links[e.target.id]) links[e.target.id].classList.add("ativo");
+                        }
+                    });
+                }, { rootMargin: "-70px 0px -65% 0px" });
+                secoes.forEach(function (s) { obs.observe(s); });
+            }
+            var preenche = document.querySelector("#barra i");
+            window.addEventListener("scroll", function () {
+                var alt = document.documentElement.scrollHeight - window.innerHeight;
+                preenche.style.width = (alt > 0 ? (window.scrollY / alt) * 100 : 0) + "%";
+            }, { passive: true });
+
+            /* marcar etapa concluída (em memória, durante a aula) */
+            var caixas = document.querySelectorAll("input[data-etapa]");
+            var contador = document.getElementById("feitos");
+            caixas.forEach(function (c) {
+                c.addEventListener("change", function () {
+                    var link = links[c.dataset.etapa];
+                    if (link) link.classList.toggle("feito", c.checked);
+                    var n = 0;
+                    caixas.forEach(function (o) { if (o.checked) n++; });
+                    contador.textContent = n;
+                });
+            });
+        })();
+    </script>
+</body>
+
+</html>
