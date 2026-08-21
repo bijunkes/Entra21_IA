@@ -1,0 +1,105 @@
+{
+  "produto": "Notebook Dell Inspiron 15",
+  "avaliacoes": [
+    {
+      "id": 1,
+      "nota": 5,
+      "texto": "Excelente produto! Superou minhas expectativas e funciona perfeitamente."
+    },
+    {
+      "id": 2,
+      "nota": 5,
+      "texto": "Estou apaixonado por esse notebook. Rápido, bonito e silencioso."
+    },
+    {
+      "id": 3,
+      "nota": 4,
+      "texto": "Produto muito bom, mas poderia ter uma bateria com maior duração."
+    },
+    {
+      "id": 4,
+      "nota": 4,
+      "texto": "Gostei bastante. O desempenho é ótimo para trabalhar e estudar."
+    },
+    {
+      "id": 5,
+      "nota": 3,
+      "texto": "O notebook funciona normalmente, sem nada de especial."
+    },
+    {
+      "id": 6,
+      "nota": 3,
+      "texto": "É um produto razoável. Atende ao básico, mas não impressiona."
+    },
+    {
+      "id": 7,
+      "nota": 2,
+      "texto": "Fiquei decepcionado. O notebook trava bastante durante o uso."
+    },
+    {
+      "id": 8,
+      "nota": 2,
+      "texto": "A qualidade não é tão boa quanto eu esperava pelo preço."
+    },
+    {
+      "id": 9,
+      "nota": 1,
+      "texto": "Péssimo produto. Parou de funcionar depois de poucos dias."
+    },
+    {
+      "id": 10,
+      "nota": 1,
+      "texto": "Muito decepcionante. Joguei meu dinheiro fora."
+    },
+    {
+      "id": 11,
+      "nota": 5,
+      "texto": "Que máquina! Liga rápido, não trava e roda tudo que preciso."
+    },
+    {
+      "id": 12,
+      "nota": 2,
+      "texto": "A entrega foi rápida, mas o produto chegou com a tela quebrada."
+    },
+    {
+      "id": 13,
+      "nota": 4,
+      "texto": "Gostei do notebook, embora o carregador esquente um pouco."
+    },
+    {
+      "id": 14,
+      "nota": 1,
+      "texto": "Parabéns para a empresa, conseguiu entregar um notebook que não funciona."
+    },
+    {
+      "id": 15,
+      "nota": 3,
+      "texto": "Não é ruim, mas também não é tão bom. Faz o que promete."
+    },
+    {
+      "id": 16,
+      "nota": 5,
+      "texto": "Estou muito satisfeito com a compra. Recomendo para todo mundo."
+    },
+    {
+      "id": 17,
+      "nota": 2,
+      "texto": "Esperava muito mais. O desempenho deixa bastante a desejar."
+    },
+    {
+      "id": 18,
+      "nota": 4,
+      "texto": "Bonito e leve, porém o teclado poderia ser mais confortável."
+    },
+    {
+      "id": 19,
+      "nota": 1,
+      "texto": "Horrível. Esquenta demais e a bateria acaba muito rápido."
+    },
+    {
+      "id": 20,
+      "nota": 3,
+      "texto": "Recebi o produto no prazo e até agora está funcionando normalmente."
+    }
+  ]
+}

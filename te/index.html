@@ -886,7 +886,8 @@
                             </li>
                             <li data-so="win"><b>Abriu a Microsoft Store sozinha</b> — é o atalho falso do Windows.
                                 Tente <code>py --version</code>. Se funcionar, use <code>py</code> no lugar de
-                                <code>python</code> o resto da aula.</li>
+                                <code>python</code> o resto da aula.
+                            </li>
                             <li><b>Versão 2.7 ou 3.6</b> — instale uma versão atual; o código desta aula não roda em
                                 Python 2.</li>
                         </ul>
@@ -912,7 +913,8 @@
                             <mark>Não precisa de senha
                                 de administrador</mark> — ele instala na sua pasta de usuário, o que resolve a vida em
                             laboratório com máquina travada.
-                            Ou, se preferir uma linha só:</p>
+                            Ou, se preferir uma linha só:
+                        </p>
                         <div class="bloco">
                             <div class="bloco-topo"><span class="rot">PowerShell</span><span
                                     class="so-etiqueta">Windows</span><button class="copiar">copiar</button></div>
@@ -1101,7 +1103,8 @@
 
                     <p class="destaque">Aquele terminal bonitinho é só uma casca. Por baixo, o Ollama subiu um
                         <b>servidor HTTP</b>
-                        na sua própria máquina. Abra o navegador em:</p>
+                        na sua própria máquina. Abra o navegador em:
+                    </p>
 
                     <div class="bloco">
                         <div class="bloco-topo"><span class="rot">Navegador</span><button class="copiar">copiar</button>
@@ -1217,7 +1220,8 @@ print(resposta["message"]["content"])</pre>
                             <li><b>Demorou mais de um minuto</b> — normal na primeira execução sem placa de vídeo. Da
                                 segunda em diante o modelo já está na memória.</li>
                             <li data-so="win"><b><code>UnicodeEncodeError</code> ao imprimir acentos</b> — rode
-                                <code>chcp 65001</code> antes, ou <code>$env:PYTHONUTF8=1</code>.</li>
+                                <code>chcp 65001</code> antes, ou <code>$env:PYTHONUTF8=1</code>.
+                            </li>
                         </ul>
                     </details>
 
@@ -1235,7 +1239,8 @@ print(resposta["message"]["content"])</pre>
 
                     <p class="destaque">Agora damos uma tarefa ao modelo. Troque tudo que está depois de
                         <code>URL = ...</code>
-                        por isto — as linhas com a barra amarela são as novas:</p>
+                        por isto — as linhas com a barra amarela são as novas:
+                    </p>
 
                     <div class="bloco">
                         <div class="bloco-topo"><span class="rot">Arquivo</span><span class="arq">analisador.py · a
@@ -1562,7 +1567,8 @@ print(json.loads(saida)["sentimento"])</pre>
                     <ul style="max-width:66ch">
                         <li>Adicionar um campo <code>aspecto</code> ao esquema (<code>entrega</code>,
                             <code>qualidade</code>, <code>preco</code>, <code>atendimento</code>) e tirar a média por
-                            aspecto.</li>
+                            aspecto.
+                        </li>
                         <li>Comparar o sentimento do texto com a nota em estrelas e listar as divergências — cliente que
                             deu 5 estrelas reclamando.</li>
                         <li>Trocar <code>llama3.2:3b</code> por <code>llama3.2:1b</code>, rodar de novo e medir quantas
