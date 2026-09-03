@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 650" width="100%" height="100%">
+  <defs>
+    <style>
+      .brand-color { fill: #186ec0; stroke: #186ec0; }
+      .stroke-style { fill: none; stroke: #186ec0; stroke-width: 11; stroke-linecap: round; stroke-linejoin: round; }
+      .text-title { font-family: 'Inter', 'Montserrat', 'Segoe UI', sans-serif; font-weight: 800; font-size: 72px; fill: #186ec0; letter-spacing: 2px; }
+      .text-subtitle { font-family: 'Inter', 'Montserrat', 'Segoe UI', sans-serif; font-weight: 600; font-size: 16px; fill: #186ec0; letter-spacing: 4px; }
+    </style>
+  </defs>
+
+  <!-- Fundo suave -->
+  <rect width="100%" height="100%" fill="#f7f9fc"/>
+
+  <g transform="translate(0, 20)">
+    <!-- ÍCONE DO CACHORRO -->
+    <g class="stroke-style">
+      <!-- Orelha (Preenchida) -->
+      <path d="M 405 135 C 385 135 372 160 382 195 C 392 215 418 220 422 195 C 428 165 420 135 405 135 Z" class="brand-color" stroke="none" />
+      
+      <!-- Cabeça, Focinho e Queixo -->
+      <path d="M 420 145 C 440 128 462 128 478 142 C 488 150 498 152 505 162 C 510 172 498 188 478 190 C 462 192 450 178 450 178 C 450 178 438 215 448 248 C 455 270 455 290 455 315" />
+      
+      <!-- Perna Dianteira Interna -->
+      <path d="M 425 235 C 435 260 435 290 435 315" />
+      
+      <!-- Linhas das Patas Dianteiras -->
+      <path d="M 420 315 L 440 315" />
+      <path d="M 445 315 L 470 315" />
+      
+      <!-- Olho -->
+      <circle cx="452" cy="158" r="5.5" class="brand-color" stroke="none" />
+      
+      <!-- Curva do Dorso conectando com o Cifrão -->
+      <path d="M 412 185 C 380 220 345 255 345 280 C 345 305 370 315 390 315 C 412 315 418 298 418 285 L 420 315" />
+      <path d="M 390 315 L 410 315" />
+
+      <!-- Símbolo do Cifrão ($) no Corpo -->
+      <path d="M 402 240 C 382 238 370 250 372 262 C 374 276 405 272 405 288 C 405 300 390 305 375 300" />
+      <path d="M 388 232 L 388 308" stroke-width="9" />
+
+      <!-- Cauda Curvada -->
+      <path d="M 358 260 C 322 250 300 280 320 302 C 340 322 380 320 380 290" />
+    </g>
+
+    <!-- TIPOGRAFIA -->
+    <!-- Título: PLUTO -->
+    <text x="400" y="435" class="text-title" text-anchor="middle">PLUTO</text>
+    
+    <!-- Subtítulo: ASSISTENTE DE GASTOS • TELEGRAM -->
+    <text x="400" y="475" class="text-subtitle" text-anchor="middle">ASSISTENTE DE GASTOS • TELEGRAM</text>
+  </g>
+</svg>
