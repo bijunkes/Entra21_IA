@@ -1,0 +1,21 @@
+<!-- <ul>
+    {% for artista in artistas %}
+    <li>{{artista.nome}}</li>
+    {% endfor %}
+</ul> -->
+
+<table>
+    <thead>
+        <th>Nome</th>
+        <th>Avaliação</th>
+    </thead>
+    <tbody>
+        {% for artista in artistas %}
+            <tr>
+                <td>{{artista.nome}}</td>
+                <td>{{artista.avaliacao}}</td>
+            </tr>
+        {% endfor %}
+        <td>{{artista.nome}}</td>
+    </tbody>
+</table>
