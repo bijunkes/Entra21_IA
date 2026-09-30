@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendas</title>
+</head>
+<body>
+    <h1>Vendas</h1>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Cliente</th>
+                <th>Produto</th>
+                <th>Quantidade</th>
+                <th>Data</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for venda in vendas %}
+            <tr>
+                <td>{{venda.cliente}}</td>
+                <td>{{venda.produto}}</td>
+                <td>{{venda.quantidade}}</td>
+                <td>{{venda.data}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <nav>
+        <a href="{% url 'clientes' %}">Clientes</a> |
+        <a href="{% url 'produtos' %}">Produtos</a> |
+        <a href="{% url 'vendas' %}">Vendas</a>
+    </nav>
+</body>
+</html>

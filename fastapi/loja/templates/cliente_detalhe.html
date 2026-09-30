@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalhes do Cliente</title>
+</head>
+<body>
+
+    <nav>
+        <a href="{% url 'clientes' %}">Clientes</a> |
+        <a href="{% url 'produtos' %}">Produtos</a> |
+        <a href="{% url 'vendas' %}">Vendas</a>
+    </nav>
+
+    <h1>Detalhes do Cliente</h1>
+
+    <p><strong>ID:</strong> {{ cliente.id }}</p>
+    <p><strong>Nome:</strong> {{ cliente.nome }}</p>
+    <p><strong>E-mail:</strong> {{ cliente.email }}</p>
+    <p><strong>Telefone:</strong> {{ cliente.telefone }}</p>
+
+    <br>
+
+    <a href="{% url 'clientes' %}">← Voltar para clientes</a>
+
+</body>
+</html>

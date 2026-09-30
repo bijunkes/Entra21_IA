@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produtos</title>
+</head>
+<body>
+    <h1>Produtos</h1>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Preço</th>
+                <th>Estoque</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for produto in produtos %}
+            <tr>
+                <td>{{produto.nome}}</td>
+                <td>{{produto.preco}}</td>
+                <td>{{produto.estoque}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <nav>
+        <a href="{% url 'clientes' %}">Clientes</a> |
+        <a href="{% url 'produtos' %}">Produtos</a> |
+        <a href="{% url 'vendas' %}">Vendas</a>
+    </nav>
+</body>
+</html>
